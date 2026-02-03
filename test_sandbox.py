@@ -1,7 +1,13 @@
 import os
+import sys
 import requests
+import json
 from dotenv import load_dotenv
 from openai import OpenAI
+
+# Add src to path to import AISummarizer
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+from ai_summarizer import AISummarizer
 
 # Load environment variables
 load_dotenv()
@@ -19,26 +25,32 @@ def test_openai():
 
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
-        # Just list models to verify auth
         models = client.models.list()
         print(f"✅ OpenAI API Connection Successful. Retrieved {len(list(models))} models.")
     except Exception as e:
         print(f"❌ OpenAI API Failed: {e}")
 
-def test_oura_sandbox():
-    print("\n--- Testing Oura Sandbox API ---")
+def fetch_sandbox_data(endpoint, params, headers):
+    url = f"https://api.ouraring.com/v2/sandbox/usercollection/{endpoint}"
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            print(f"✅ Fetched Sandbox {endpoint}.")
+            return response.json()
+        else:
+            print(f"❌ Failed to fetch {endpoint}: {response.status_code}")
+            return {}
+    except Exception as e:
+        print(f"❌ Request failed for {endpoint}: {e}")
+        return {}
+
+def test_oura_sandbox_and_ai():
+    print("\n--- Testing Oura Sandbox API & AI Summarizer ---")
     if not OURA_ACCESS_TOKEN:
         print("❌ OURA_ACCESS_TOKEN not found in .env")
         return
 
-    # Using the Sandbox Tag endpoint from openapi-1.27.json
-    # Endpoint: /v2/sandbox/usercollection/tag
-    url = "https://api.ouraring.com/v2/sandbox/usercollection/tag"
-    
-    # Required parameters (or at least start_date/end_date are common)
-    # The spec says they are optional but usually good to provide.
-    # Let's try without first to see if it defaults or if we need them.
-    # Actually, sandbox usually needs specific dates to return dummy data or just works.
+    # specific dates for sandbox data to ensure we get results
     params = {
         "start_date": "2021-11-01", 
         "end_date": "2021-12-01"
@@ -48,29 +60,40 @@ def test_oura_sandbox():
         "Authorization": f"Bearer {OURA_ACCESS_TOKEN}"
     }
 
-    try:
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code == 200:
-            data = response.json()
-            print("✅ Oura Sandbox API Connection Successful.")
-            # print(f"Response snippet: {str(data)[:200]}...")
-        else:
-            print(f"❌ Oura Sandbox API Failed with status {response.status_code}")
-            print(f"Response: {response.text}")
-    except Exception as e:
-        print(f"❌ Oura Sandbox API Request Failed: {e}")
+    # Fetch data
+    sleep_data = fetch_sandbox_data("daily_sleep", params, headers)
+    activity_data = fetch_sandbox_data("daily_activity", params, headers)
+    readiness_data = fetch_sandbox_data("daily_readiness", params, headers)
 
-def test_telegram():
+    if not (sleep_data and activity_data and readiness_data):
+        print("❌ Could not fetch all required data for summary.")
+        return
+
+    # Generate Summary
+    print("\n--- Generating AI Summary ---")
+    if not OPENAI_API_KEY:
+        print("❌ OPENAI_API_KEY missing, skipping AI summary.")
+        return
+
+    summarizer = AISummarizer(api_key=OPENAI_API_KEY)
+    summary = summarizer.generate_health_summary(sleep_data, activity_data, readiness_data)
+    
+    print("✅ Summary Generated:")
+    print(summary)
+    
+    # Send to Telegram
+    test_telegram(summary)
+
+def test_telegram(message_text):
     print("\n--- Testing Telegram Bot ---")
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("❌ TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in .env")
         return
 
-    message = "Hello from Oura Bot Sandbox Test!"
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": message
+        "text": message_text
     }
 
     try:
@@ -84,8 +107,7 @@ def test_telegram():
         print(f"❌ Telegram Request Failed: {e}")
 
 if __name__ == "__main__":
-    print("Starting Sandbox Verification...")
+    print("Starting Sandbox AI Bot Verification...")
     test_openai()
-    test_oura_sandbox()
-    test_telegram()
+    test_oura_sandbox_and_ai()
     print("\nDone.")
