@@ -98,9 +98,28 @@ def main():
     logger.info(f"Oura Bot started. Scheduled to run at {args.time} daily.")
     schedule.every().day.at(args.time).do(job)
 
+    # Initialize notifier for polling commands
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    notifier = TelegramNotifier(telegram_token, chat_id, verbose=False, logger=logger.info)
+
+    logger.info("Listening for 'run' command...")
+
     while True:
         schedule.run_pending()
-        time.sleep(60)
+        
+        # Check for commands
+        try:
+            updates = notifier.get_updates()
+            for text in updates:
+                if text.strip().lower() == "run":
+                    logger.info("Received 'run' command! Generating summary...")
+                    notifier.send_message("Processing manual run request...")
+                    job()
+        except Exception as e:
+             logger.error(f"Error checking updates: {e}")
+
+        time.sleep(2)
 
 if __name__ == "__main__":
     main()

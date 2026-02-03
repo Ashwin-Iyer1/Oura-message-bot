@@ -31,6 +31,7 @@ class TelegramNotifier:
         self.verbose = verbose
         self.logger = logger or (lambda msg: print(msg) if verbose else None)
         self.enabled = bool(bot_token and chat_id)
+        self.last_update_id = None
 
     def send_message(self, text: str) -> Optional[int]:
         """Send message, returning message ID."""
@@ -87,9 +88,41 @@ class TelegramNotifier:
             response.raise_for_status()
             return True
 
-        except requests.HTTPError as e:
-            self.logger(f"[TELEGRAM ERROR] Failed to update message {message_id}: {e}")
-            return False
         except requests.RequestException as e:
             self.logger(f"[TELEGRAM ERROR] Network error updating message {message_id}: {e}")
             return False
+
+    def get_updates(self) -> list[str]:
+        """Check for new messages."""
+        if not self.enabled:
+            return []
+
+        url = f"https://api.telegram.org/bot{self.bot_token}/getUpdates"
+        params = {
+            "timeout": 0,
+            "allowed_updates": ["message"]
+        }
+        if self.last_update_id:
+            params["offset"] = self.last_update_id + 1
+
+        try:
+            response = self.session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            result = data.get("result", [])
+            messages = []
+            
+            for update in result:
+                self.last_update_id = update["update_id"]
+                if "message" in update and "text" in update["message"]:
+                    chat_id = str(update["message"]["chat"]["id"])
+                    # Only accept commands from the configured chat_id for security
+                    if chat_id == self.chat_id:
+                        messages.append(update["message"]["text"])
+            
+            return messages
+
+        except Exception as e:
+            self.logger(f"[TELEGRAM ERROR] Failed to get updates: {e}")
+            return []
