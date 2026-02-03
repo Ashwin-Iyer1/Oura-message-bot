@@ -93,7 +93,8 @@ def test_telegram(message_text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": message_text
+        "text": message_text.replace("<br>", "\n"),
+        "parse_mode": "HTML"
     }
 
     try:

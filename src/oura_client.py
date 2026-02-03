@@ -54,3 +54,17 @@ class OuraClient:
             "start_date": start_date,
             "end_date": end_date
         })
+
+    def get_daily_spo2(self, start_date: str, end_date: str) -> Dict[str, Any]:
+        """Get daily SpO2 documents."""
+        return self._get("/usercollection/daily_spo2", params={
+            "start_date": start_date,
+            "end_date": end_date
+        })
+
+    def get_workouts(self, start_date: str, end_date: str) -> Dict[str, Any]:
+        """Get workout documents."""
+        return self._get("/usercollection/workout", params={
+            "start_date": start_date,
+            "end_date": end_date
+        })
