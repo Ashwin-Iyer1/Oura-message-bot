@@ -40,8 +40,8 @@ class TelegramNotifier:
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
         payload = {
             "chat_id": self.chat_id,
-            "text": text,
-            "parse_mode": "Markdown",
+            "text": text.replace("<br>", "\n"),
+            "parse_mode": "html",
             "disable_web_page_preview": True,
         }
 
@@ -77,8 +77,8 @@ class TelegramNotifier:
         payload = {
             "chat_id": self.chat_id,
             "message_id": message_id,
-            "text": text,
-            "parse_mode": "Markdown",
+            "text": text.replace("<br>", "\n"),
+            "parse_mode": "html",
             "disable_web_page_preview": True,
         }
 
