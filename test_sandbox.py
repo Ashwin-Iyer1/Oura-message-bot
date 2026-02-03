@@ -64,6 +64,9 @@ def test_oura_sandbox_and_ai():
     sleep_data = fetch_sandbox_data("daily_sleep", params, headers)
     activity_data = fetch_sandbox_data("daily_activity", params, headers)
     readiness_data = fetch_sandbox_data("daily_readiness", params, headers)
+    stress_data = fetch_sandbox_data("daily_stress", params, headers)
+    spo2_data = fetch_sandbox_data("daily_spo2", params, headers)
+    workout_data = fetch_sandbox_data("workout", params, headers)
 
     if not (sleep_data and activity_data and readiness_data):
         print("❌ Could not fetch all required data for summary.")
@@ -76,7 +79,14 @@ def test_oura_sandbox_and_ai():
         return
 
     summarizer = AISummarizer(api_key=OPENAI_API_KEY)
-    summary = summarizer.generate_health_summary(sleep_data, activity_data, readiness_data)
+    summary = summarizer.generate_health_summary(
+        sleep_data, 
+        activity_data, 
+        readiness_data, 
+        stress_data=stress_data, 
+        spo2_data=spo2_data, 
+        workout_data=workout_data
+    )
     
     print("✅ Summary Generated:")
     print(summary)

@@ -53,6 +53,9 @@ def job():
         sleep = oura.get_daily_sleep(start_date, end_date)
         activity = oura.get_daily_activity(start_date, end_date)
         readiness = oura.get_daily_readiness(start_date, end_date)
+        stress = oura.get_daily_stress(start_date, end_date)
+        spo2 = oura.get_daily_spo2(start_date, end_date)
+        workouts = oura.get_workouts(start_date, end_date)
         
         # validate we have data
         if not sleep.get('data') and not activity.get('data') and not readiness.get('data'):
@@ -63,7 +66,14 @@ def job():
 
         # Generate Summary
         logger.info("Generating AI summary...")
-        summary = ai.generate_health_summary(sleep, activity, readiness)
+        summary = ai.generate_health_summary(
+            sleep, 
+            activity, 
+            readiness,
+            stress_data=stress,
+            spo2_data=spo2,
+            workout_data=workouts
+        )
         
         # Send to Telegram
         logger.info("Sending to Telegram...")
