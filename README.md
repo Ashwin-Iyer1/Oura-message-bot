@@ -4,9 +4,10 @@ A Telegram bot that sends you daily AI-generated summaries of your Oura Ring hea
 
 ## Features
 
-- **Daily Health Summaries**: Automatically fetches your sleep, activity, and readiness scores.
+- **Expanded Metrics**: Includes Daily Stress, SpO2, and Workouts alongside sleep, activity, and readiness.
 - **AI Insights**: Uses OpenAI (GPT-4o) to analyze your data and provide personalized, encouraging tips.
 - **Telegram Integration**: Receives daily reports directly in your preferred chat.
+- **Interactive Commands**: Send "run" to the bot to trigger an immediate summary.
 - **Sandbox Mode**: Includes a test script to verify API connections using Oura's Sandbox environment.
 
 ## Prerequisites
@@ -54,7 +55,12 @@ python src/bot.py --time "08:00"
 python src/bot.py --run-now
 ```
 
-### Run Tests
+### Interactive Mode
+Once the bot is running, you can send commands directly via Telegram:
+
+- **Manual Summary**: Send the message `"run"` to your bot to instantly generate and receive your health summary.
+
+### Run tests
 To verify valid API credentials and simulate the bot workflow using Oura Sandbox data:
 ```bash
 python3 test_sandbox.py
