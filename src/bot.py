@@ -25,18 +25,19 @@ def job():
     logger.info("Starting daily summary job...")
     
     # Load credentials
-    oura_token = os.getenv("OURA_ACCESS_TOKEN")
+    oura_client_id = os.getenv("OURA_CLIENT_ID")
+    oura_client_secret = os.getenv("OURA_CLIENT_SECRET")
     openai_key = os.getenv("OPENAI_API_KEY")
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
-    if not all([oura_token, openai_key, telegram_token, chat_id]):
+    if not all([oura_client_id, oura_client_secret, openai_key, telegram_token, chat_id]):
         logger.error("Missing configuration. Please check .env file.")
         return
 
     try:
         # Initialize clients
-        oura = OuraClient(oura_token)
+        oura = OuraClient(client_id=oura_client_id, client_secret=oura_client_secret)
         ai = AISummarizer(openai_key)
         telegram = TelegramNotifier(telegram_token, chat_id, verbose=True, logger=logger.info)
 

@@ -8,12 +8,13 @@ A Telegram bot that sends you daily AI-generated summaries of your Oura Ring hea
 - **AI Insights**: Uses OpenAI (GPT-4o) to analyze your data and provide personalized, encouraging tips.
 - **Telegram Integration**: Receives daily reports directly in your preferred chat.
 - **Interactive Commands**: Send "run" to the bot to trigger an immediate summary.
+- **Persistent Auth**: OAuth2 implementation with automatic token refreshing.
 - **Sandbox Mode**: Includes a test script to verify API connections using Oura's Sandbox environment.
 
 ## Prerequisites
 
 - Python 3.9+
-- [Oura API Access Token](https://cloud.ouraring.com/docs/authentication)
+- [Oura Cloud Application](https://cloud.ouraring.com/oauth/applications) (Client ID & Client Secret)
 - [OpenAI API Key](https://platform.openai.com/)
 - [Telegram Bot Token](https://core.telegram.org/bots#how-do-i-create-a-bot)
 
@@ -31,13 +32,21 @@ A Telegram bot that sends you daily AI-generated summaries of your Oura Ring hea
    ```
 
 3. **Configure Environment Variables:**
-   Create a `.env` file in the root directory (copy from `.env.example` if available) and add your credentials:
+   Create a `.env` file in the root directory and add your credentials:
    ```env
-   OURA_ACCESS_TOKEN=your_oura_token
+   OURA_CLIENT_ID=your_client_id
+   OURA_CLIENT_SECRET=your_client_secret
    OPENAI_API_KEY=your_openai_key
    TELEGRAM_BOT_TOKEN=your_telegram_bot_token
    TELEGRAM_CHAT_ID=your_telegram_chat_id
    ```
+
+4. **One-Time Authentication:**
+   Run the setup script to log in to Oura and save your access tokens:
+   ```bash
+   python3 setup_oauth.py
+   ```
+   Follow the instructions to authorize the app in your browser. This will generate a `oura_tokens.json` file.
 
 ## Usage
 
